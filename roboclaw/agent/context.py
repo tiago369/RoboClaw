@@ -23,6 +23,13 @@ class ContextBuilder:
         self.workspace = workspace
         self.memory = MemoryStore(workspace)
         self.skills = SkillsLoader(workspace)
+        self._episode_memory = None
+
+    def set_episode_memory(self, episode_memory) -> None:
+        """Injeta a memória episódica robótica (RoboClawMemory).
+        Chamado pelo AgentLoop após instanciar ambos os objetos.
+        """
+        self._episode_memory = episode_memory
 
     def build_system_prompt(self, skill_names: list[str] | None = None) -> str:
         """Build the system prompt from identity, bootstrap files, memory, and skills."""
@@ -35,6 +42,14 @@ class ContextBuilder:
         memory = self.memory.get_memory_context()
         if memory:
             parts.append(f"# Memory\n\n{memory}")
+
+        if self._episode_memory is not None:
+            recent = self._episode_memory._store.get_recent(limit=5)
+            if recent:
+                lines = ["## Robotic episode memory (recent experience)"]
+                for i, ep in enumerate(recent, 1):
+                    lines.append(f"  {i}. {ep.to_context_string()}")
+                parts.append("\n".join(lines))
 
         always_skills = self.skills.get_always_skills()
         if always_skills:

@@ -15,6 +15,7 @@ from loguru import logger
 
 from roboclaw.agent.context import ContextBuilder
 from roboclaw.agent.memory import MemoryConsolidator
+from roboclaw.roboclaw_memory.roboclaw_memory.memory import RoboClawMemory
 from roboclaw.agent.subagent import SubagentManager
 from roboclaw.agent.tools.cron import CronTool
 from roboclaw.agent.skills import BUILTIN_SKILLS_DIR
@@ -115,6 +116,10 @@ class AgentLoop:
             build_messages=self.context.build_messages,
             get_tool_definitions=self.tools.get_definitions,
         )
+        self.episode_memory = RoboClawMemory(
+            db_path=workspace / "memory" / "episodes.db",
+        )
+        self.context.set_episode_memory(self.episode_memory)
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
