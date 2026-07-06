@@ -1,9 +1,9 @@
 """Constants for session state and commands."""
 
-from enum import StrEnum
+from enum import Enum
 
 
-class SessionState(StrEnum):
+class SessionState(Enum):
     IDLE = "idle"
     PREPARING = "preparing"
     CALIBRATING = "calibrating"
@@ -15,7 +15,7 @@ class SessionState(StrEnum):
     ERROR = "error"
 
 
-class Command(StrEnum):
+class Command(Enum):
     SAVE_EPISODE = "save_episode"
     DISCARD_EPISODE = "discard_episode"
     SKIP_RESET = "skip_reset"

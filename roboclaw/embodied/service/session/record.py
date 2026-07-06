@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from enum import StrEnum
+from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 from roboclaw.embodied.board import Board, Command, InputConsumer, OutputConsumer, SessionState
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 _RE_RECORDING_EP = re.compile(r"Recording episode (\d+)")
 
 
-class RecordPhase(StrEnum):
+class RecordPhase(Enum):
     IDLE = "idle"
     PREPARING = "preparing"
     RECORDING = "recording"
@@ -207,6 +207,7 @@ class RecordSession(Session):
         self._phase = RecordPhaseController(self.board)
         self._kwargs: dict[str, Any] = {}
         self._dataset_name: str = ""
+        self._eap: Any = None
 
     def _initial_board_fields(self) -> dict[str, Any]:
         return {
@@ -234,6 +235,32 @@ class RecordSession(Session):
 
     # -- CLI entry point ---------------------------------------------------
 
+    def attach_eap(
+            self,
+            reset_executor: Any,
+            episode_memory: Any = None,
+            max_retries: int = 2,
+    ) -> None:
+        """
+        Activate the EAP loop in this record session.
+
+        Should be called before record(). The EAPController will be started
+        together with the recording and stopped automatically in the finally block.
+ 
+        Args:
+            reset_executor: ResetExecutor with policy π← (SpotResetExecutor
+                            or LeRobotResetExecutor)
+            episode_memory: RoboClawMemory optional for recording episodes
+            max_retries:    number of reset attempts before escalating to human
+        """
+        from roboclaw.embodied.service.session.eap import EAPController
+        self._eap = EAPController(
+            phase_controller=self._phase,
+            reset_executor=reset_executor,
+            episode_memory=episode_memory,
+            max_reset_retries=max_retries,
+        )
+
     async def record(
         self,
         manifest: Manifest,
@@ -259,10 +286,17 @@ class RecordSession(Session):
                     target_episodes=kwargs.get("num_episodes", 10),
                     dataset=self._dataset_name,
                 )
+
+                if self._eap is not None:
+                    self._eap.start()
+
                 from roboclaw.embodied.toolkit.tty import TtySession
 
                 return await TtySession(tty_handoff).run(self)
             finally:
+
+                if self._eap is not None:
+                    await self._eap.stop()
                 self._parent.release_embodiment()
         return "This action requires a local terminal."
 
@@ -326,6 +360,8 @@ class RecordSession(Session):
         return f"Recording finished. {saved} episodes saved."
 
     async def stop(self) -> None:
+        if self._eap is not None:
+            await self._eap.stop()
         if self._parent.busy:
             await self._phase.request_stop()
             await super().stop()
