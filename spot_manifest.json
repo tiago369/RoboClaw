@@ -1,0 +1,130 @@
+{
+  "version": 2,
+  "robot_type": "spot",
+
+  "arms": [],
+  "hands": [],
+
+  "cameras": [
+    {
+      "alias": "hand",
+      "type": "ros2",
+      "topic": "/spot/camera/hand/image",
+      "fps": 30,
+      "width": 640,
+      "height": 480,
+      "encoding": "auto",
+      "active": true
+    },
+    {
+      "alias": "frontleft",
+      "type": "ros2",
+      "topic": "/spot/camera/frontleft/image",
+      "fps": 15,
+      "width": 640,
+      "height": 480,
+      "encoding": "auto",
+      "active": false
+    },
+    {
+      "alias": "frontright",
+      "type": "ros2",
+      "topic": "/spot/camera/frontright/image",
+      "fps": 15,
+      "width": 640,
+      "height": 480,
+      "encoding": "auto",
+      "active": false
+    },
+    {
+      "alias": "left",
+      "type": "ros2",
+      "topic": "/spot/camera/left/image",
+      "fps": 15,
+      "width": 640,
+      "height": 480,
+      "encoding": "auto",
+      "active": false
+    },
+    {
+      "alias": "right",
+      "type": "ros2",
+      "topic": "/spot/camera/right/image",
+      "fps": 15,
+      "width": 640,
+      "height": 480,
+      "encoding": "auto",
+      "active": false
+    },
+    {
+      "alias": "back",
+      "type": "ros2",
+      "topic": "/spot/camera/back/image",
+      "fps": 15,
+      "width": 640,
+      "height": 480,
+      "encoding": "auto",
+      "active": false
+    },
+    {
+      "alias": "hand_depth",
+      "type": "ros2",
+      "topic": "/spot/depth/hand/image",
+      "fps": 15,
+      "width": 640,
+      "height": 480,
+      "encoding": "16UC1",
+      "active": false
+    },
+    {
+      "alias": "frontleft_depth",
+      "type": "ros2",
+      "topic": "/spot/depth/frontleft/image",
+      "fps": 15,
+      "width": 640,
+      "height": 480,
+      "encoding": "16UC1",
+      "active": false
+    }
+  ],
+
+  "datasets": {
+    "root": "~/.roboclaw/workspace/embodied/datasets"
+  },
+
+  "policies": {
+    "root": "~/.roboclaw/workspace/embodied/policies"
+  },
+
+  "spot": {
+    "ros2_namespace": "/spot",
+    "cmd_vel_topic": "/cmd_vel",
+    "arm_pose_topic": "/arm_pose_commands",
+    "joint_state_topic": "/joint_states",
+    "connection_timeout_s": 10.0,
+    "use_degrees": false,
+    "arm_joints": [
+      "arm_sh0",
+      "arm_sh1",
+      "arm_el0",
+      "arm_el1",
+      "arm_wr0",
+      "arm_wr1",
+      "arm_f1x"
+    ],
+    "eap": {
+      "enabled": true,
+      "max_reset_retries": 2,
+      "reset_sequence": [
+        {
+          "action": "arm_go_to_pose",
+          "kwargs": {"x": 0.5, "y": 0.0, "z": 0.3, "pitch_deg": 0.0}
+        },
+        {
+          "action": "move_backward",
+          "kwargs": {"distance_m": 0.3}
+        }
+      ]
+    }
+  }
+}
