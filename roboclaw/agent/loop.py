@@ -15,7 +15,6 @@ from loguru import logger
 
 from roboclaw.agent.context import ContextBuilder
 from roboclaw.agent.memory import MemoryConsolidator
-from roboclaw.roboclaw_memory.roboclaw_memory.memory import RoboClawMemory
 from roboclaw.agent.subagent import SubagentManager
 from roboclaw.agent.tools.cron import CronTool
 from roboclaw.agent.skills import BUILTIN_SKILLS_DIR
@@ -67,6 +66,7 @@ class AgentLoop:
         channels_config: ChannelsConfig | None = None,
         tty_handoff: Any = None,
         embodied_service: Any = None,
+        spot_service: Any = None,
     ):
         from roboclaw.config.schema import ExecToolConfig, WebSearchConfig
 
@@ -74,6 +74,7 @@ class AgentLoop:
         self.channels_config = channels_config
         self.tty_handoff = tty_handoff
         self.embodied_service = embodied_service
+        self.spot_service = spot_service
         self.provider = provider
         self.workspace = workspace
         self.model = model or provider.get_default_model()
@@ -116,6 +117,8 @@ class AgentLoop:
             build_messages=self.context.build_messages,
             get_tool_definitions=self.tools.get_definitions,
         )
+        # Memória episódica robótica (complementa MemoryConsolidator)
+        from roboclaw.roboclaw_memory.roboclaw_memory.memory import RoboClawMemory
         self.episode_memory = RoboClawMemory(
             db_path=workspace / "memory" / "episodes.db",
         )
@@ -146,6 +149,26 @@ class AgentLoop:
             for tool in create_embodied_tools(tty_handoff=self.tty_handoff):
                 tool.embodied_service = self.embodied_service
                 self.tools.register(tool)
+
+        if getattr(self, "spot_service", None) is not None:
+            from roboclaw.embodied.spot.tools import create_spot_tools
+            for tool in create_spot_tools(self.spot_service, self.episode_memory):
+                self.tools.register(tool)
+
+    def register_spot_tools(self, spot_service: Any) -> None:
+        """
+        Registra os tools do Spot após a inicialização do AgentLoop.
+
+        Use quando o SpotService não está disponível no __init__
+        (ex: conexão ROS2 lazy, hot-swap de serviço).
+
+        Args:
+            spot_service: instância de SpotService (ou mock para testes)
+        """
+        self.spot_service = spot_service
+        from roboclaw.embodied.spot.tools import create_spot_tools
+        for tool in create_spot_tools(spot_service, self.episode_memory):
+            self.tools.register(tool)
 
     async def _connect_mcp(self) -> None:
         """Connect to configured MCP servers (one-time, lazy)."""

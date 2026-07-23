@@ -23,12 +23,10 @@ class ContextBuilder:
         self.workspace = workspace
         self.memory = MemoryStore(workspace)
         self.skills = SkillsLoader(workspace)
-        self._episode_memory = None
+        self._episode_memory = None  # injetado pelo AgentLoop após criação
 
     def set_episode_memory(self, episode_memory) -> None:
-        """Injeta a memória episódica robótica (RoboClawMemory).
-        Chamado pelo AgentLoop após instanciar ambos os objetos.
-        """
+        """Injeta a memória episódica robótica (RoboClawMemory)."""
         self._episode_memory = episode_memory
 
     def build_system_prompt(self, skill_names: list[str] | None = None) -> str:
