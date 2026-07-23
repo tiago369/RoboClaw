@@ -24,6 +24,13 @@ class DeviceInfo:
         """Return spec name for a given role, e.g. 'so101_follower'."""
         return f"{self.name}_{role}" if role else self.name
 
+_MOBILE_ROBOTS: dict[str, Device] = {}
+
+def register_mobile_robot(name: str, roles: tuple[str, ...] = ()) -> None:
+    """Register a mobile robot in the catalog."""
+    _MOBILE_ROBOTS[name] = DeviceInfo(name=name, roles=roles)
+
+register_mobile_robot("spot", roles=("follower",))
 
 def models_for(category: EmbodimentCategory) -> list[Any]:
     """Return all registered specs/infos for a category."""
@@ -37,6 +44,8 @@ def models_for(category: EmbodimentCategory) -> list[Any]:
                 continue
             model_names.append(model)
         return [DeviceInfo(name=name, roles=("follower", "leader")) for name in model_names]
+    if category == EmbodimentCategory.MOBILE:
+        return list(_MOBILE_ROBOTS.values())
     # HAND, HUMANOID, MOBILE — not yet supported in the setup wizard
     return []
 

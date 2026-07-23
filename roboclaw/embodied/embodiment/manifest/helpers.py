@@ -19,7 +19,7 @@ _ARM_FIELDS = {"alias", "type", "port", "calibration_dir", "calibrated", "side"}
 _HAND_TYPES = all_hand_types()
 _HAND_FIELDS = {"alias", "type", "port", "slave_id"}
 _CAMERA_FIELDS = {"alias", "side", "port", "width", "height", "fps", "fourcc"}
-_VALID_TOP_KEYS = {"version", "arms", "hands", "cameras", "datasets", "policies"}
+_VALID_TOP_KEYS = {"version", "arms", "hands", "cameras", "datasets", "policies", "robot_type", "spot"}
 
 
 # ── Path helpers ───────────────────────────────────────────────────────
