@@ -471,6 +471,13 @@ def gateway(
     cron = CronService(cron_store_path)
 
     # Create agent with cron service
+    _spot_service_gw = None
+    try:
+        from roboclaw.embodied.spot.service import SpotService
+        _spot_service_gw = SpotService()
+    except Exception:
+        pass  # Spot não disponível
+
     agent = AgentLoop(
         bus=bus,
         provider=provider,
@@ -486,6 +493,7 @@ def gateway(
         session_manager=session_manager,
         mcp_servers=config.tools.mcp_servers,
         channels_config=config.channels,
+        spot_service=_spot_service_gw,
     )
 
     # Set cron callback (needs agent)
@@ -712,6 +720,17 @@ def agent(
 
     embodied_service = EmbodiedService()
 
+    # ── Spot integration ──────────────────────────────────────────────
+    # SpotService é inicializado lazy — o nó ROS2 só é criado quando o
+    # primeiro tool do Spot é chamado. Se o driver ROS2 do Spot não estiver
+    # rodando, as tools retornam erro sem travar o loop do agente.
+    _spot_service = None
+    try:
+        from roboclaw.embodied.spot.service import SpotService
+        _spot_service = SpotService()
+    except Exception:
+        pass  # Spot não disponível — agente funciona sem tools do Spot
+
     agent_loop = AgentLoop(
         bus=bus,
         provider=provider,
@@ -728,6 +747,7 @@ def agent(
         channels_config=config.channels,
         tty_handoff=_embodied_tty_handoff,
         embodied_service=embodied_service,
+        spot_service=_spot_service,
     )
 
     # Shared reference for progress callbacks
