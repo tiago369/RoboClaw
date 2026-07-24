@@ -24,7 +24,6 @@ from typing import Any
 
 from roboclaw.agent.tools.base import Tool
 
-
 _BASE_ACTIONS = [
     "move_forward", "move_backward", "move_left", "move_right",
     "rotate_left", "rotate_right", "navigate_to_pose",
@@ -423,7 +422,6 @@ class SpotPerceptionTool(_SpotTool):
     async def _camera_status(self) -> str:
         """Verifica se os três streams de câmera estão disponíveis."""
         self._svc._ensure_ready()
-        import time
         with self._svc._cam_lock:
             has_rgb   = self._svc._latest_rgb   is not None
             has_depth = self._svc._latest_depth is not None
@@ -473,32 +471,6 @@ def _parse(result_json: str) -> dict:
         return json.loads(result_json)
     except (json.JSONDecodeError, TypeError):
         return {}
-
-
-# ---------------------------------------------------------------------------
-# Factory
-# ---------------------------------------------------------------------------
-
-def create_spot_tools(
-    spot_service: Any,
-    episode_memory: Any = None,
-) -> list[_SpotTool]:
-    """
-    Instancia os 3 grupos de tools do Spot.
-
-    Args:
-        spot_service:   instância de SpotService (ou mock para testes)
-        episode_memory: instância de RoboClawMemory (opcional)
-
-    Returns:
-        Lista pronta para registrar no ToolRegistry do AgentLoop.
-    """
-    kw = {"spot_service": spot_service, "episode_memory": episode_memory}
-    return [
-        SpotBaseTool(**kw),
-        SpotArmTool(**kw),
-        SpotPerceptionTool(**kw),
-    ]
 
 
 # ---------------------------------------------------------------------------
@@ -693,6 +665,7 @@ class SpotLocationTool(_SpotTool):
         try:
             self._svc._ensure_ready()
             import asyncio
+
             from nav_msgs.msg import Odometry
 
             result: dict | None = None
@@ -721,6 +694,10 @@ class SpotLocationTool(_SpotTool):
         except Exception:
             return None
 
+
+# ---------------------------------------------------------------------------
+# Factory
+# ---------------------------------------------------------------------------
 
 def create_spot_tools(
     spot_service: Any,
