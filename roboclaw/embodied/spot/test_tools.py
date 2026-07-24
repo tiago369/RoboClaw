@@ -136,9 +136,9 @@ class MockMemory:
     def __init__(self):
         self.stored: list[dict] = []
         self.retrieved: list[str] = []
-    def store(self, subtask, outcome, env_state):
-        self.stored.append({"subtask": subtask, "outcome": outcome})
-    def retrieve(self, query, top_k=3, as_context_string=False):
+    def store(self, subtask, outcome, env_state, kind="task"):
+        self.stored.append({"subtask": subtask, "outcome": outcome, "kind": kind})
+    def retrieve(self, query, top_k=3, as_context_string=False, kind="task"):
         self.retrieved.append(query)
         return [] if not as_context_string else ""
 

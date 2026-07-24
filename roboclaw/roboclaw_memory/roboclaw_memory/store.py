@@ -10,15 +10,14 @@ from typing import Optional
 
 import numpy as np
 
+from .embeddings import cosine_similarity, load_model
+
 _MODEL = None
 
 def _get_model():
     global _MODEL
-    if _MODEL is not None: return _MODEL
-    try:
-        from sentence_transformers import SentenceTransformer
-        _MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-    except Exception: pass
+    if _MODEL is None:
+        _MODEL = load_model()
     return _MODEL
 
 @dataclass
@@ -30,6 +29,7 @@ class Episode:
     timestamp: float
     task_id: str
     attempt: int
+    kind: str = "task"
     embedding: Optional[np.ndarray] = field(default=None, repr=False)
 
     def to_context_string(self) -> str:
@@ -53,17 +53,24 @@ class EpisodeStore:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 subtask TEXT NOT NULL, outcome TEXT NOT NULL,
                 env_state TEXT NOT NULL, timestamp REAL NOT NULL,
-                task_id TEXT NOT NULL DEFAULT '', attempt INTEGER NOT NULL DEFAULT 1);
+                task_id TEXT NOT NULL DEFAULT '', attempt INTEGER NOT NULL DEFAULT 1,
+                kind TEXT NOT NULL DEFAULT 'task');
             CREATE TABLE IF NOT EXISTS embeddings (
                 episode_id INTEGER PRIMARY KEY REFERENCES episodes(id), vector BLOB NOT NULL);
             CREATE INDEX IF NOT EXISTS idx_task_id ON episodes(task_id);
             CREATE INDEX IF NOT EXISTS idx_subtask  ON episodes(subtask);
+            CREATE INDEX IF NOT EXISTS idx_kind     ON episodes(kind);
         """); self._conn.commit()
+        # Migrate DBs created before `kind` existed.
+        cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(episodes)")}
+        if "kind" not in cols:
+            self._conn.execute("ALTER TABLE episodes ADD COLUMN kind TEXT NOT NULL DEFAULT 'task'")
+            self._conn.commit()
 
-    def insert(self, subtask, outcome, env_state, task_id="", attempt=1) -> int:
+    def insert(self, subtask, outcome, env_state, task_id="", attempt=1, kind="task") -> int:
         cur = self._conn.execute(
-            "INSERT INTO episodes (subtask,outcome,env_state,timestamp,task_id,attempt) VALUES (?,?,?,?,?,?)",
-            (subtask, outcome, json.dumps(env_state), time.time(), task_id, attempt))
+            "INSERT INTO episodes (subtask,outcome,env_state,timestamp,task_id,attempt,kind) VALUES (?,?,?,?,?,?,?)",
+            (subtask, outcome, json.dumps(env_state), time.time(), task_id, attempt, kind))
         eid = cur.lastrowid; self._conn.commit()
         if self._model is not None:
             vec = self._model.encode(f"{subtask} {outcome} {json.dumps(env_state)}", convert_to_numpy=True).astype(np.float32)
@@ -77,31 +84,51 @@ class EpisodeStore:
     def get_by_task(self, task_id) -> list[Episode]:
         return [self._row(r) for r in self._conn.execute("SELECT * FROM episodes WHERE task_id=? ORDER BY timestamp", (task_id,)).fetchall()]
 
-    def get_recent(self, limit=20) -> list[Episode]:
-        return [self._row(r) for r in self._conn.execute("SELECT * FROM episodes ORDER BY timestamp DESC LIMIT ?", (limit,)).fetchall()]
+    def get_recent(self, limit=20, kind=None) -> list[Episode]:
+        if kind is None:
+            rows = self._conn.execute("SELECT * FROM episodes ORDER BY timestamp DESC LIMIT ?", (limit,)).fetchall()
+        else:
+            rows = self._conn.execute(
+                "SELECT * FROM episodes WHERE kind=? ORDER BY timestamp DESC LIMIT ?", (kind, limit)).fetchall()
+        return [self._row(r) for r in rows]
+
+    def count(self, kind=None) -> int:
+        if kind is None:
+            row = self._conn.execute("SELECT COUNT(*) c FROM episodes").fetchone()
+        else:
+            row = self._conn.execute("SELECT COUNT(*) c FROM episodes WHERE kind=?", (kind,)).fetchone()
+        return row["c"]
 
     def delete(self, eid):
         self._conn.execute("DELETE FROM embeddings WHERE episode_id=?", (eid,))
         self._conn.execute("DELETE FROM episodes WHERE id=?", (eid,)); self._conn.commit()
 
-    def search(self, query, top_k=3) -> list[tuple[Episode, float]]:
-        if self._model is None: return self._fallback(query, top_k)
+    def search(self, query, top_k=3, kind=None) -> list[tuple[Episode, float]]:
+        if self._model is None: return self._fallback(query, top_k, kind)
         qv = self._model.encode(query, convert_to_numpy=True).astype(np.float32)
-        rows = self._conn.execute("SELECT e.*,b.vector FROM episodes e JOIN embeddings b ON b.episode_id=e.id").fetchall()
+        sql = "SELECT e.*,b.vector FROM episodes e JOIN embeddings b ON b.episode_id=e.id"
+        params: tuple = ()
+        if kind is not None:
+            sql += " WHERE e.kind=?"
+            params = (kind,)
+        rows = self._conn.execute(sql, params).fetchall()
         if not rows: return []
         scored = []
         for r in rows:
             v = np.frombuffer(r["vector"], dtype=np.float32)
-            s = float(np.dot(qv,v)/(np.linalg.norm(qv)*np.linalg.norm(v)+1e-9))
-            scored.append((self._row(r), s))
+            scored.append((self._row(r), cosine_similarity(qv, v)))
         scored.sort(key=lambda x: x[1], reverse=True)
         return scored[:top_k]
 
-    def _fallback(self, query, top_k):
+    def _fallback(self, query, top_k, kind=None):
         words = [w for w in query.lower().split() if len(w)>3] or [query]
         seen, res = set(), []
+        kind_sql = " AND kind=?" if kind is not None else ""
         for w in words:
-            for r in self._conn.execute("SELECT * FROM episodes WHERE lower(subtask) LIKE ? LIMIT ?", (f"%{w}%", top_k)).fetchall():
+            params = (f"%{w}%", *([kind] if kind is not None else []), top_k)
+            for r in self._conn.execute(
+                f"SELECT * FROM episodes WHERE lower(subtask) LIKE ?{kind_sql} LIMIT ?", params
+            ).fetchall():
                 if r["id"] not in seen:
                     seen.add(r["id"]); res.append((self._row(r), 1.0))
             if len(res)>=top_k: break
@@ -110,7 +137,7 @@ class EpisodeStore:
     def _row(self, row) -> Episode:
         return Episode(id=row["id"], subtask=row["subtask"], outcome=row["outcome"],
                        env_state=json.loads(row["env_state"]), timestamp=row["timestamp"],
-                       task_id=row["task_id"], attempt=row["attempt"])
+                       task_id=row["task_id"], attempt=row["attempt"], kind=row["kind"])
 
     def close(self): self._conn.close()
     def __enter__(self): return self

@@ -147,9 +147,7 @@ class EAPController:
                 await self._task
             except asyncio.CancelledError:
                 pass
-        logger.info("EAPController stopped - resets: %d ok / %d escalated",
-                    self.total_resets_succeeded,
-                    self.total_resets_escalated,)
+        logger.info("EAPController stopped - stats: %s", self.stats())
 
     # ---------------------------------------------------------------------------
     # Main loop
@@ -255,7 +253,7 @@ class EAPController:
         }
 
         try:
-            self._mem.store(subtask=subtask, outcome=outcome, env_state=env_state)
+            self._mem.store(subtask=subtask, outcome=outcome, env_state=env_state, kind="eap_reset")
         except Exception as exc:
             logger.warning("EAP: failed to store episode in memory: %s", exc)
 

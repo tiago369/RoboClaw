@@ -52,15 +52,36 @@ _PERCEPTION_ACTIONS = [
 # ---------------------------------------------------------------------------
 
 class _SpotTool(Tool):
+    #: Overridden per subclass with its own _*_ACTIONS list.
+    _valid_actions: list[str] = []
+
     def __init__(self, spot_service: Any, episode_memory: Any = None) -> None:
         self._svc = spot_service
         self._mem = episode_memory
 
-    def _retrieve(self, action: str, kwargs: dict) -> None:
+    async def execute(self, **kwargs: Any) -> str:
+        action = kwargs.get("action", "")
+        if action not in self._valid_actions:
+            return f"Erro: ação desconhecida '{action}' para {self.name}."
+        mem_context = self._retrieve(action, kwargs)
+        result = await self._execute_action(action, kwargs)
+        return self._append_memory(result, mem_context)
+
+    async def _execute_action(self, action: str, kwargs: dict) -> str:
+        raise NotImplementedError
+
+    @staticmethod
+    def _append_memory(result: str, mem_context: str) -> str:
+        if not mem_context:
+            return result
+        return f"{result}\n\n{mem_context}"
+
+    def _retrieve(self, action: str, kwargs: dict) -> str:
+        """Busca experiência passada relevante (kind='task', exclui resets do EAP)."""
         if self._mem is None:
-            return
+            return ""
         query = f"{action} {' '.join(str(v) for v in kwargs.values())}"
-        self._mem.retrieve(query, top_k=3, as_context_string=True)
+        return self._mem.retrieve(query, top_k=3, as_context_string=True, kind="task")
 
     def _store(self, action: str, result_json: str, extra: dict | None = None) -> None:
         if self._mem is None:
@@ -97,6 +118,8 @@ class SpotBaseTool(_SpotTool):
         frame_id: str = "map"
     """
 
+    _valid_actions = _BASE_ACTIONS
+
     @property
     def name(self) -> str:
         return "spot_base"
@@ -130,13 +153,7 @@ class SpotBaseTool(_SpotTool):
             "additionalProperties": False,
         }
 
-    async def execute(self, **kwargs: Any) -> str:
-        action = kwargs.get("action", "")
-        if action not in _BASE_ACTIONS:
-            return f"Erro: ação desconhecida '{action}' para spot_base."
-
-        self._retrieve(action, kwargs)
-
+    async def _execute_action(self, action: str, kwargs: dict) -> str:
         if action == "move_forward":
             result = await self._svc.move_forward(kwargs.get("distance_m", 1.0))
         elif action == "move_backward":
@@ -204,6 +221,8 @@ class SpotArmTool(_SpotTool):
       move_to_home   → pose home + abre gripper
     """
 
+    _valid_actions = _ARM_ACTIONS
+
     @property
     def name(self) -> str:
         return "spot_arm"
@@ -247,13 +266,7 @@ class SpotArmTool(_SpotTool):
             "additionalProperties": False,
         }
 
-    async def execute(self, **kwargs: Any) -> str:
-        action = kwargs.get("action", "")
-        if action not in _ARM_ACTIONS:
-            return f"Erro: ação desconhecida '{action}' para spot_arm."
-
-        self._retrieve(action, kwargs)
-
+    async def _execute_action(self, action: str, kwargs: dict) -> str:
         # -- Pipeline completo --
         if action == "full_grasp_pipeline":
             return await self._run_full_pipeline(kwargs)
@@ -377,6 +390,8 @@ class SpotPerceptionTool(_SpotTool):
                       (necessário antes de segment_object)
     """
 
+    _valid_actions = _PERCEPTION_ACTIONS
+
     @property
     def name(self) -> str:
         return "spot_perception"
@@ -404,13 +419,7 @@ class SpotPerceptionTool(_SpotTool):
             "additionalProperties": False,
         }
 
-    async def execute(self, **kwargs: Any) -> str:
-        action = kwargs.get("action", "")
-        if action not in _PERCEPTION_ACTIONS:
-            return f"Erro: ação desconhecida '{action}' para spot_perception."
-
-        self._retrieve(action, kwargs)
-
+    async def _execute_action(self, action: str, kwargs: dict) -> str:
         if action == "camera_status":
             result = await self._camera_status()
         else:
@@ -511,6 +520,8 @@ class SpotLocationTool(_SpotTool):
         super().__init__(spot_service, episode_memory)
         self._lm = location_memory
 
+    _valid_actions = _LOCATION_ACTIONS
+
     @property
     def name(self) -> str:
         return "spot_location"
@@ -551,13 +562,7 @@ class SpotLocationTool(_SpotTool):
             "additionalProperties": False,
         }
 
-    async def execute(self, **kwargs: Any) -> str:
-        action = kwargs.get("action", "")
-        if action not in _LOCATION_ACTIONS:
-            return f"Erro: ação desconhecida '{action}' para spot_location."
-
-        self._retrieve(action, kwargs)
-
+    async def _execute_action(self, action: str, kwargs: dict) -> str:
         if action == "save_location":
             return self._save_location(kwargs)
 
