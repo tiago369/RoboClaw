@@ -1,13 +1,13 @@
 """CLI commands for roboclaw."""
 
 import asyncio
-from contextlib import contextmanager, nullcontext
 import os
 import select
 import signal
 import sys
 import time
 import uuid
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from typing import Any
 
@@ -20,12 +20,11 @@ except (AttributeError, ValueError):
     pass
 
 import typer
-from prompt_toolkit import print_formatted_text
-from prompt_toolkit import PromptSession
+from prompt_toolkit import PromptSession, print_formatted_text
+from prompt_toolkit.application import run_in_terminal
 from prompt_toolkit.formatted_text import ANSI, HTML
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.patch_stdout import patch_stdout
-from prompt_toolkit.application import run_in_terminal
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.table import Table
@@ -863,7 +862,9 @@ def agent(
                             _print_agent_response(turn_response[0], render_markdown=markdown)
                     except KeyboardInterrupt:
                         _restore_terminal()
-                        _print_session_exit_message(resolved_session_id)
+                        _print_session_exit_message(
+                            resolved_session_id, prefix="Received SIGINT, goodbye!",
+                        )
                         break
                     except EOFError:
                         _restore_terminal()

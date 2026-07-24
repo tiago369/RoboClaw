@@ -6,9 +6,9 @@ import statistics
 from pathlib import Path
 from typing import Any, Callable
 
+import numpy as np
 from huggingface_hub import hf_hub_download
 from loguru import logger
-import numpy as np
 
 from .bridge import read_parquet_rows
 from .features import percentile
@@ -286,7 +286,6 @@ def _list_video_files(video_dir: Path) -> list[Path]:
 
 
 from .visual_validators import validate_depth_assets, validate_visual_assets
-
 
 # ---------------------------------------------------------------------------
 # Metadata validator

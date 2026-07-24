@@ -12,6 +12,7 @@ from pydantic import Field
 try:
     import nh3
     from mistune import create_markdown
+    from mistune.renderers.html import HTMLRenderer
     from nio import (
         AsyncClient,
         AsyncClientConfig,
@@ -60,6 +61,11 @@ MatrixMediaEvent: TypeAlias = RoomMessageMedia | RoomEncryptedMedia
 
 MATRIX_MARKDOWN = create_markdown(
     escape=True,
+    # Mistune treats "mxc:" as a harmful protocol by default and replaces it
+    # with "#harmful-link" before nh3 ever sees it. Allow it here — nh3's
+    # attribute_filter (see below) is the actual enforcement point and only
+    # keeps mxc:// image sources anyway.
+    renderer=HTMLRenderer(escape=True, allow_harmful_protocols=["mxc:"]),
     plugins=["table", "strikethrough", "url", "superscript", "subscript"],
 )
 

@@ -38,16 +38,16 @@ def reset(
     config_path = get_config_path()
 
     if not yes:
-        _console.print(f"[yellow]This will delete:[/yellow]")
+        _console.print("[yellow]This will delete:[/yellow]")
         _console.print(f"  - {workspace}")
         if not keep_config:
             _console.print(f"  - {config_path}")
         if keep_calibration:
-            _console.print(f"  [dim](keeping calibration files)[/dim]")
+            _console.print("  [dim](keeping calibration files)[/dim]")
         if keep_manifest:
             _console.print("  [dim](keeping manifest.json)[/dim]")
         if keep_config:
-            _console.print(f"  [dim](keeping config.json)[/dim]")
+            _console.print("  [dim](keeping config.json)[/dim]")
         if not typer.confirm("Continue?"):
             raise typer.Abort()
 

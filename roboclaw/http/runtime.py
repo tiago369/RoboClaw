@@ -17,7 +17,11 @@ from roboclaw.cron.service import CronService
 from roboclaw.cron.types import CronJob
 from roboclaw.heartbeat.service import HeartbeatService
 from roboclaw.providers.base import GenerationSettings
-from roboclaw.providers.factory import ProviderConfigurationError, UnconfiguredProvider, build_provider
+from roboclaw.providers.factory import (
+    ProviderConfigurationError,
+    UnconfiguredProvider,
+    build_provider,
+)
 from roboclaw.session.manager import SessionManager
 
 
@@ -115,7 +119,7 @@ class WebRuntime:
 
     def _build_embodied(self, web_ch: Any) -> None:
         """Build HardwareMonitor and EmbodiedService with Board."""
-        from roboclaw.embodied.board import Board, WS_TYPES
+        from roboclaw.embodied.board import WS_TYPES, Board
         from roboclaw.embodied.embodiment.hardware.monitor import HardwareMonitor
         from roboclaw.embodied.embodiment.manifest import Manifest
         from roboclaw.embodied.service import EmbodiedService

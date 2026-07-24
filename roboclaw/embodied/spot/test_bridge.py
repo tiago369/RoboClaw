@@ -59,6 +59,7 @@ for _ros_mod in (
         sys.modules[_ros_mod] = _s
 
 import types as _t
+
 _geometry = sys.modules["geometry_msgs.msg"]
 _geometry.Twist = type("Twist", (), {"linear": _t.SimpleNamespace(x=0,y=0,z=0),
                                       "angular": _t.SimpleNamespace(x=0,y=0,z=0)})
@@ -532,6 +533,7 @@ async def test_register_spot_tools_on_agent_loop():
     It uses a simple namespace that simulates the AgentLoop.
     """
     import types as _types
+
     from roboclaw.embodied.spot.tools import create_spot_tools
 
     loop = _types.SimpleNamespace(
@@ -558,6 +560,7 @@ async def test_register_spot_tools_on_agent_loop():
 async def test_spot_tools_already_registered_no_duplicate():
     """Calling `register_spot_tools` twice does not duplicate the tools."""
     import types as _types
+
     from roboclaw.embodied.spot.tools import create_spot_tools
 
     class DeduplicatingRegistry(MockToolRegistry):
@@ -595,10 +598,8 @@ async def test_spot_tools_already_registered_no_duplicate():
 # ---------------------------------------------------------------------------
 
 async def test_eap_with_spot_reset_executor():
-    from roboclaw.embodied.service.session.eap import (
-        EAPController, SpotResetExecutor, ResetResult
-    )
-    import types as _types
+
+    from roboclaw.embodied.service.session.eap import SpotResetExecutor
 
     svc = MockSpotService()
     reset_sequence = [
@@ -676,9 +677,7 @@ async def test_eap_full_cycle_with_spot():
 # ---------------------------------------------------------------------------
 
 def test_catalog_mobile_spot():
-    from roboclaw.embodied.embodiment.catalog import (
-        EmbodimentCategory, models_for, is_supported
-    )
+    from roboclaw.embodied.embodiment.catalog import EmbodimentCategory, is_supported, models_for
     mobile = models_for(EmbodimentCategory.MOBILE)
     names = [m.name for m in mobile]
     assert "spot" in names, f"spot not in mobile catalog: {names}"

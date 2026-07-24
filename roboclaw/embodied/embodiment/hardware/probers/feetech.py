@@ -13,7 +13,7 @@ _FEETECH_POS_ADDR = 56
 class FeetechProber:
     """Probe and read Feetech servo motors on a serial port."""
 
-    def probe(self, port_path: str, baudrate: int = DEFAULT_BAUDRATE, motor_ids: list[int] | None = None) -> list[int]:
+    def probe(self, port_path: str, baudrate: int = DEFAULT_BAUDRATE, motor_ids: list[int] | None = None) -> list[int] | None:
         """Try reading Present_Position for Feetech motor IDs."""
         import scservo_sdk as scs
 
@@ -21,9 +21,9 @@ class FeetechProber:
         handler = scs.PortHandler(port_path)
         try:
             if not handler.openPort():
-                return []
+                return None
         except OSError:
-            return []
+            return None
         try:
             handler.setBaudRate(baudrate)
             packet = scs.PacketHandler(0)

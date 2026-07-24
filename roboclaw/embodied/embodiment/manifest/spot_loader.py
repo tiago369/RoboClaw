@@ -39,19 +39,19 @@ def load_spot_manifest(path: str | pathlib.Path | None = None) -> dict[str, Any]
             home_manifest.parent.mkdir(parents=True, exist_ok=True)
             home_manifest.write_text(_DEFAULT_MANIFEST.read_text(encoding="utf-8"))
         path = home_manifest
-    
+
     path = pathlib.Path(path).expanduser()
     if not path.exists():
         raise FileNotFoundError(f"Manifest of Spot not found: {path}")
-    
+
     with open(path, encoding="utf-8") as f:
         manifest = json.load(f)
-    
+
     if manifest.get("robot_type") != "spot":
         raise ValueError(
             f"Manifest in {path} is not from Spot (robot_type={manifest.get('robot_type')!r})"
         )
-    
+
     return manifest
 
 
@@ -75,7 +75,7 @@ def load_spot_config(
     """
     from lerobot.robots.spot.config_spot import SpotConfig
 
-    manifest = load_spot_config(manifest_path)
+    manifest = load_spot_manifest(manifest_path)
     spot_cfg = manifest.get("spot", {})
 
     all_cams = manifest.get("cameras", [])
@@ -86,9 +86,6 @@ def load_spot_config(
 
     if not active_aliases:
         active_aliases = ["hand"]
-    
-    datasets_root = manifest.get("datasets", {}).get("root", "~/.roboclaw/workspace/embodied/datasets")
-    policies_root = manifest.get("datasets", {}).get("root", "~/.roboclaw/workspace/embodied/policies")
 
     cfg = SpotConfig(
         ros2_namespace=spot_cfg.get("ros2_namespace", "/spot"),
@@ -103,7 +100,7 @@ def load_spot_config(
     return cfg, active_aliases
 
 
-def load_eap_reset_sequence(manifest_path: str | patlib.Path | None = None) -> list[dict]:
+def load_eap_reset_sequence(manifest_path: str | pathlib.Path | None = None) -> list[dict]:
     """
     Extracts the sequence of reset and EAP from the manifest.
 
@@ -123,6 +120,5 @@ def load_eap_reset_sequence(manifest_path: str | patlib.Path | None = None) -> l
 def _default_reset_sequence() -> list[dict]:
     return [
          {"action": "arm_go_to_pose", "kwargs": {"x": 0.5, "y": 0.0, "z": 0.3, "pitch_deg": 0.0}},
-130
         {"action": "move_backward",  "kwargs": {"distance_m": 0.3}},
     ]

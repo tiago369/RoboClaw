@@ -7,13 +7,13 @@ from collections import OrderedDict
 from typing import Any
 
 from loguru import logger
+from pydantic import Field
 
 from roboclaw.bus.events import OutboundMessage
 from roboclaw.bus.queue import MessageBus
 from roboclaw.channels.base import BaseChannel
 from roboclaw.config.paths import get_media_dir
 from roboclaw.config.schema import Base
-from pydantic import Field
 
 WECOM_AVAILABLE = importlib.util.find_spec("wecom_aibot_sdk") is not None
 

@@ -1,10 +1,14 @@
 """API pública da memória episódica robótica do RoboClaw."""
 from __future__ import annotations
-import time, uuid
+
+import time
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
 from .store import Episode, EpisodeStore
+
 
 @dataclass
 class WorkingMemory:

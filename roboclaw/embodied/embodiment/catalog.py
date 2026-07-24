@@ -24,7 +24,7 @@ class DeviceInfo:
         """Return spec name for a given role, e.g. 'so101_follower'."""
         return f"{self.name}_{role}" if role else self.name
 
-_MOBILE_ROBOTS: dict[str, Device] = {}
+_MOBILE_ROBOTS: dict[str, DeviceInfo] = {}
 
 def register_mobile_robot(name: str, roles: tuple[str, ...] = ()) -> None:
     """Register a mobile robot in the catalog."""
@@ -57,7 +57,7 @@ def get_spec(name: str) -> Any:
 
     name = name.lower()
     try:
-        cfg = get_probe_config(name)
+        get_probe_config(name)
         return DeviceInfo(name=name, roles=("follower", "leader"))
     except ValueError:
         pass

@@ -9,10 +9,10 @@ from roboclaw.embodied.embodiment.hardware.motion import resolve_active_motion
 from roboclaw.embodied.embodiment.hardware.probers import _REGISTRY, get_prober
 from roboclaw.embodied.embodiment.hardware.scan import (
     capture_camera_frames,
+    restore_stderr,
     scan_cameras,
     scan_serial_ports,
     suppress_stderr,
-    restore_stderr,
 )
 from roboclaw.embodied.embodiment.interface.serial import SerialInterface
 from roboclaw.embodied.embodiment.interface.video import VideoInterface

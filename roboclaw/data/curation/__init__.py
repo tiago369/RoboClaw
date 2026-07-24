@@ -1,5 +1,51 @@
 from __future__ import annotations
 
+# -- canonical trajectory --
+from .canonical import (
+    ALOHA_ARM_JOINT_ORDER,
+    CANONICAL_GROUP_SLICES,
+    CanonicalTrajectory,
+    build_canonical_trajectory,
+    build_cartesian_canonical_trajectory,
+    build_cartesian_feature_rows,
+    build_joint_canonical_trajectory,
+)
+
+# -- clustering (k-medoids, DBA) --
+from .clustering import (
+    compute_dba_barycenter,
+    discover_prototype_clusters,
+    refine_clusters_with_dba,
+)
+
+# -- DTW distance algorithms --
+from .dtw import (
+    CARTESIAN_20D_GROUP_WEIGHTS,
+    CARTESIAN_20D_WINDOW_RATIO,
+    DEFAULT_DTW_HUBER_DELTA,
+    average_vectors,
+    build_distance_matrix,
+    build_distance_matrix_with_progress,
+    dtw_alignment,
+    dtw_distance,
+    euclidean_distance,
+    grouped_huber_distance,
+    huber_loss,
+    resolve_dtw_configuration,
+    vector_distance,
+)
+from .exports import (
+    build_quality_result_rows,
+    build_text_annotation_rows,
+    dataset_quality_parquet_path,
+    dataset_text_annotations_parquet_path,
+    export_quality_csv,
+    publish_quality_metadata_parquet,
+    publish_text_annotations_metadata_parquet,
+    save_working_quality_parquet,
+    workflow_quality_parquet_path,
+)
+
 # -- features (scalars, row resolution, series, joints) --
 from .features import (
     ACTION_FIELD_CANDIDATES,
@@ -29,41 +75,6 @@ from .features import (
     summarize_series,
 )
 
-# -- DTW distance algorithms --
-from .dtw import (
-    CARTESIAN_20D_GROUP_WEIGHTS,
-    CARTESIAN_20D_WINDOW_RATIO,
-    DEFAULT_DTW_HUBER_DELTA,
-    average_vectors,
-    build_distance_matrix,
-    build_distance_matrix_with_progress,
-    dtw_alignment,
-    dtw_distance,
-    euclidean_distance,
-    grouped_huber_distance,
-    huber_loss,
-    resolve_dtw_configuration,
-    vector_distance,
-)
-
-# -- clustering (k-medoids, DBA) --
-from .clustering import (
-    compute_dba_barycenter,
-    discover_prototype_clusters,
-    refine_clusters_with_dba,
-)
-
-# -- canonical trajectory --
-from .canonical import (
-    ALOHA_ARM_JOINT_ORDER,
-    CANONICAL_GROUP_SLICES,
-    CanonicalTrajectory,
-    build_canonical_trajectory,
-    build_cartesian_canonical_trajectory,
-    build_cartesian_feature_rows,
-    build_joint_canonical_trajectory,
-)
-
 # -- propagation (quality tags, annotations, grasp/place) --
 from .propagation import (
     build_confidence_payload,
@@ -74,18 +85,15 @@ from .propagation import (
     propagate_annotation_spans,
 )
 
-# -- validators --
-from .validators import (
-    VALIDATOR_REGISTRY,
-    finalize_validator,
-    load_episode_data,
-    make_issue,
-    run_quality_validators,
-    validate_action,
-    validate_depth_assets,
-    validate_metadata,
-    validate_timing,
-    validate_visual_assets,
+# -- serializers (API response builders) --
+from .serializers import (
+    build_workspace_payload,
+    coerce_int,
+    derive_task_value,
+    episode_time_bounds,
+    serialize_propagation_results,
+    serialize_prototype_results,
+    serialize_quality_results,
 )
 
 # -- workflow state persistence --
@@ -103,27 +111,18 @@ from .state import (
     save_workflow_state,
 )
 
-from .exports import (
-    build_quality_result_rows,
-    build_text_annotation_rows,
-    dataset_quality_parquet_path,
-    dataset_text_annotations_parquet_path,
-    export_quality_csv,
-    publish_quality_metadata_parquet,
-    publish_text_annotations_metadata_parquet,
-    save_working_quality_parquet,
-    workflow_quality_parquet_path,
-)
-
-# -- serializers (API response builders) --
-from .serializers import (
-    build_workspace_payload,
-    coerce_int,
-    derive_task_value,
-    episode_time_bounds,
-    serialize_propagation_results,
-    serialize_prototype_results,
-    serialize_quality_results,
+# -- validators --
+from .validators import (
+    VALIDATOR_REGISTRY,
+    finalize_validator,
+    load_episode_data,
+    make_issue,
+    run_quality_validators,
+    validate_action,
+    validate_depth_assets,
+    validate_metadata,
+    validate_timing,
+    validate_visual_assets,
 )
 
 __all__ = [

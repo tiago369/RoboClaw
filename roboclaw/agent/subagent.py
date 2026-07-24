@@ -4,7 +4,7 @@ import asyncio
 import json
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
@@ -18,6 +18,9 @@ from roboclaw.bus.queue import MessageBus
 from roboclaw.config.schema import ExecToolConfig
 from roboclaw.providers.base import LLMProvider
 from roboclaw.utils.helpers import build_assistant_message
+
+if TYPE_CHECKING:
+    from roboclaw.config.schema import ExecToolConfig, WebSearchConfig
 
 
 class SubagentManager:
@@ -106,7 +109,7 @@ class SubagentManager:
             ))
             tools.register(WebSearchTool(config=self.web_search_config, proxy=self.web_proxy))
             tools.register(WebFetchTool(proxy=self.web_proxy))
-            
+
             system_prompt = self._build_subagent_prompt()
             messages: list[dict[str, Any]] = [
                 {"role": "system", "content": system_prompt},
@@ -196,7 +199,7 @@ Summarize this naturally for the user. Keep it brief (1-2 sentences). Do not men
 
         await self.bus.publish_inbound(msg)
         logger.debug("Subagent [{}] announced result to {}:{}", task_id, origin['channel'], origin['chat_id'])
-    
+
     def _build_subagent_prompt(self) -> str:
         """Build a focused system prompt for the subagent."""
         from roboclaw.agent.context import ContextBuilder

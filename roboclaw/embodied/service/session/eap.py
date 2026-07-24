@@ -46,7 +46,7 @@ class ResetExecutor(Protocol):
     the inverse policy in EAP. Allows swapping executors without modifying
     the EAPController — e.g., SpotResetExecutor, LeRobotResetExecutor, MockResetExecutor.
     """
- 
+
     async def execute_reset(self, env_state: dict | None = None) -> "ResetResult":
         """
         Execute the reset policy (π←).
@@ -65,7 +65,7 @@ class ResetExecutor(Protocol):
 
 class ResetResult:
     """Result of a reset policy execution."""
- 
+
     def __init__(
         self,
         success: bool,
@@ -77,7 +77,7 @@ class ResetResult:
         self.message = message
         self.env_state_after = env_state_after or {}
         self.attempts = attempts
- 
+
     def __repr__(self) -> str:
         return (
             f"ResetResult(success={self.success}, "
@@ -88,7 +88,7 @@ class ResetResult:
 # EAP Controller
 # ---------------------------------------------------------------------------
 
-class EAPController: 
+class EAPController:
     """
     Controls the EAP loop within a recording session.
  
@@ -120,7 +120,7 @@ class EAPController:
         self._poll = poll_interval_s
         self._running = False
         self._task: asyncio.Task | None = None
- 
+
         # Session statistics
         self.total_resets_attempted = 0
         self.total_resets_succeeded = 0
@@ -170,7 +170,7 @@ class EAPController:
                 await asyncio.sleep(self._poll)
             except asyncio.CancelledError:
                 break
-            except Exception as e:
+            except Exception:
                 logger.exception("EAPController monitor loop error")
                 await asyncio.sleep(self._poll * 2)
 
@@ -220,13 +220,13 @@ class EAPController:
                     except RuntimeError as e:
                         logger.warning("EAP: failed to send skip_reset: %s", e)
                 return
-                
+
             logger.warning(
                 "EAP: reset attempt %d/%d failed: %s",
                 attempt, self._max_retries, result.message,
             )
             self._store_episode("eap_reset", "failed", result)
-    
+
             if attempt < self._max_retries:
                 await asyncio.sleep(self._poll * 2)
 
@@ -247,7 +247,7 @@ class EAPController:
         """
         if self._mem is None:
             return
-        
+
         env_state = {
             "eap_attempts": result.attempts,
             "reset_message": result.message,
@@ -292,7 +292,7 @@ class SpotResetExecutor:
                                   {"action": "move_backward",  "kwargs": {"distance_m": 0.5}}]
         timeout_s:        total timeout for the reset (seconds)
     """
- 
+
     def __init__(
             self,
             spot_service: Any,
@@ -302,7 +302,7 @@ class SpotResetExecutor:
         self._svc = spot_service
         self._sequence = reset_sequence
         self._timeout = timeout_s
-    
+
     async def execute_reset(self, env_state: dict | None = None) -> ResetResult:
         """Executes the reset sequence with timeout"""
         try:
@@ -315,7 +315,7 @@ class SpotResetExecutor:
                 success=False,
                 message=f"Reset timed out after {self._timeout}s",
                 )
-        
+
     async def _run_sequence(self) -> ResetResult:
         """Executes each step of the reset sequence"""
         import json
@@ -330,7 +330,7 @@ class SpotResetExecutor:
                     success=False,
                     message=f"SpotService has no method '{action}' (step {i+1})",
                 )
-            
+
             try:
                 result_json = await method(**kwargs)
                 data = json.loads(result_json) if isinstance(result_json, str) else {}
@@ -347,7 +347,7 @@ class SpotResetExecutor:
                 )
 
         return ResetResult(success=True, message="Reset sequence completed")
-    
+
 # ---------------------------------------------------------------------------
 # LeRobotResetExecutor
 # ---------------------------------------------------------------------------

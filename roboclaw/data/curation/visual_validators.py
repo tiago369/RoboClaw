@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 
-from .validators import finalize_validator, make_issue, safe_float, _merge_threshold_overrides
+from .validators import _merge_threshold_overrides, finalize_validator, make_issue
 
 
 def _sample_video_frames(video_path: Path, max_samples: int = 10) -> tuple[list[np.ndarray], float, int, int, int]:

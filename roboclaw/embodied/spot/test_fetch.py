@@ -3,7 +3,14 @@ test_fetch.py — testes do fluxo completo de fetch + location memory.
 cd RoboClaw && python roboclaw/embodied/spot/test_fetch.py
 """
 from __future__ import annotations
-import asyncio, json, os, sys, tempfile, types, pathlib
+
+import asyncio
+import json
+import os
+import pathlib
+import sys
+import tempfile
+import types
 
 _HERE = os.path.abspath(os.path.dirname(__file__))
 _ROOT = os.path.abspath(os.path.join(_HERE, "../../.."))
@@ -28,10 +35,12 @@ sys.modules["roboclaw.agent.tools.base"].Tool = _Tool
 
 from roboclaw.embodied.spot.location_memory import LocationMemory
 from roboclaw.embodied.spot.tools import (
-    SpotBaseTool, SpotArmTool, SpotPerceptionTool,
-    SpotLocationTool, create_spot_tools,
+    SpotArmTool,
+    SpotBaseTool,
+    SpotLocationTool,
+    SpotPerceptionTool,
+    create_spot_tools,
 )
-
 
 # ---------------------------------------------------------------------------
 # Mocks

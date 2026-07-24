@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Literal, cast
 
 from roboclaw.data.dataset_sessions import (
-    list_local_dataset_options,
     resolve_dataset_handle_or_workspace,
 )
 

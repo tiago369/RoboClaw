@@ -16,7 +16,6 @@ from __future__ import annotations
 import asyncio
 import json
 import threading
-import time
 from typing import Any
 
 
@@ -80,12 +79,12 @@ class SpotService:
         self._executor.add_node(self._node)
 
         # Publishers
-        from geometry_msgs.msg import Twist, PoseStamped
+        from geometry_msgs.msg import PoseStamped, Twist
         self._cmd_vel_pub = self._node.create_publisher(Twist, "/cmd_vel", 10)
         self._arm_pose_pub = self._node.create_publisher(PoseStamped, "/arm_pose_commands", 10)
 
         # Camera subscribers
-        from sensor_msgs.msg import Image, CameraInfo
+        from sensor_msgs.msg import CameraInfo, Image
         self._node.create_subscription(Image,      "/camera/hand/image_raw",    self._rgb_cb,   10)
         self._node.create_subscription(Image,      "/depth/hand/image_raw",     self._depth_cb, 10)
         self._node.create_subscription(CameraInfo, "/camera/hand/camera_info",  self._info_cb,  10)
@@ -95,7 +94,7 @@ class SpotService:
         self._node.create_subscription(String, "/arm_command_status", self._arm_status_cb, 10)
 
         # Grasp pipeline service clients
-        from grasp_pipeline_interfaces.srv import ThreeDSegmentator, Graspnet, TargetPoses, Grasping
+        from grasp_pipeline_interfaces.srv import Grasping, Graspnet, TargetPoses, ThreeDSegmentator
         self._seg_client     = self._node.create_client(ThreeDSegmentator, "tree_d_segment_service")
         self._grasp_client   = self._node.create_client(Graspnet,          "contact_graspnet_service")
         self._curobo_client  = self._node.create_client(TargetPoses,       "cu_robo_service")
@@ -362,8 +361,8 @@ class SpotService:
                 "error": f"grasping_service não respondeu em {timeout_s}s",
             })
 
-        from grasp_pipeline_interfaces.srv import Grasping
         from control_msgs.msg import GripperCommand
+        from grasp_pipeline_interfaces.srv import Grasping
 
         req = Grasping.Request()
         req.arm_command = self._last_target_pose
@@ -401,9 +400,9 @@ class SpotService:
         if not self._grasping_client.wait_for_service(timeout_sec=timeout_s):
             return json.dumps({"status": "error", "error": "grasping_service indisponível"})
 
-        from grasp_pipeline_interfaces.srv import Grasping
         from control_msgs.msg import GripperCommand
         from geometry_msgs.msg import PoseStamped
+        from grasp_pipeline_interfaces.srv import Grasping
 
         home = PoseStamped()
         home.header.frame_id = "body"
@@ -569,9 +568,9 @@ class SpotService:
         if not self._grasping_client.wait_for_service(timeout_sec=timeout_s):
             return json.dumps({"status": "error", "error": "grasping_service indisponível"})
 
-        from grasp_pipeline_interfaces.srv import Grasping
         from control_msgs.msg import GripperCommand
         from geometry_msgs.msg import PoseStamped
+        from grasp_pipeline_interfaces.srv import Grasping
 
         observe_pose = PoseStamped()
         observe_pose.header.frame_id = "body"
@@ -614,9 +613,9 @@ class SpotService:
         if not self._grasping_client.wait_for_service(timeout_sec=timeout_s):
             return json.dumps({"status": "error", "error": "grasping_service indisponível"})
 
-        from grasp_pipeline_interfaces.srv import Grasping
         from control_msgs.msg import GripperCommand
         from geometry_msgs.msg import PoseStamped
+        from grasp_pipeline_interfaces.srv import Grasping
 
         carry_pose = PoseStamped()
         carry_pose.header.frame_id = "body"

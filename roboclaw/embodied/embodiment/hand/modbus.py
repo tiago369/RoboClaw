@@ -27,8 +27,9 @@ def probe_modbus_slave_ids(
     Sends a read-holding-registers (0x03) request to each candidate ID
     and returns those that respond with a valid frame.
     """
-    import serial
     import time
+
+    import serial
 
     found: list[int] = []
     ser = serial.Serial(port, baudrate, timeout=0.2)

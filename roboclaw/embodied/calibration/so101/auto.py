@@ -32,18 +32,17 @@ import time
 from dataclasses import dataclass
 from threading import Event
 
-from loguru import logger
-
 from lerobot.motors.feetech.feetech import FeetechMotorsBus
 from lerobot.motors.motors_bus import Motor, MotorNormMode
+from loguru import logger
 
 from roboclaw.embodied.calibration.model import CalibrationProfile, MotorCalibrationProfile
 from roboclaw.embodied.calibration.so101.prober import (
-    AutoCalibrationStopped,
     EEPROM_COMMIT_DELAY,
-    MotorProber,
     POSITION_MAX,
     POSITION_MIN,
+    AutoCalibrationStopped,
+    MotorProber,
     _retry,
     concurrent_move,
     paired_iter_probe,

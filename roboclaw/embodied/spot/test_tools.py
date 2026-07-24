@@ -3,7 +3,12 @@ test_tools.py — testes isolados sem ROS2, sem hardware.
 cd RoboClaw && python roboclaw/embodied/spot/test_tools.py
 """
 from __future__ import annotations
-import asyncio, json, os, sys, types
+
+import asyncio
+import json
+import os
+import sys
+import types
 
 _HERE = os.path.abspath(os.path.dirname(__file__))
 _ROOT = os.path.abspath(os.path.join(_HERE, "../../.."))
@@ -143,9 +148,11 @@ class MockMemory:
 # ---------------------------------------------------------------------------
 
 from roboclaw.embodied.spot.tools import (
-    SpotBaseTool, SpotArmTool, SpotPerceptionTool, create_spot_tools
+    SpotArmTool,
+    SpotBaseTool,
+    SpotPerceptionTool,
+    create_spot_tools,
 )
-
 
 # ---------------------------------------------------------------------------
 # Testes: SpotBaseTool
@@ -350,9 +357,9 @@ async def test_perception_unknown_action():
 
 async def test_memory_hooks_all_groups():
     svc = MockSpotService(); mem = MockMemory()
-    import tempfile, pathlib
-    from roboclaw.embodied.spot.location_memory import LocationMemory
-    import tempfile as _tf, pathlib as _pl
+    import pathlib as _pl
+    import tempfile as _tf
+
     from roboclaw.embodied.spot.location_memory import LocationMemory as _LM
     with _tf.TemporaryDirectory() as _tmp:
         _lm = _LM(_pl.Path(_tmp) / "locs.json")

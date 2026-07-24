@@ -12,7 +12,7 @@ from urllib.parse import quote
 import httpx
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
-from huggingface_hub.errors import HFValidationError, HfHubHTTPError, RepositoryNotFoundError
+from huggingface_hub.errors import HfHubHTTPError, HFValidationError, RepositoryNotFoundError
 from loguru import logger
 from pydantic import BaseModel
 
@@ -25,10 +25,10 @@ from roboclaw.data.curation.paths import datasets_root
 from roboclaw.data.curation.serializers import episode_time_bounds
 from roboclaw.data.dataset_sessions import (
     create_uploaded_directory_session,
+    list_local_dataset_options,
     register_remote_dataset_session,
 )
 from roboclaw.data.explorer.dual_source import (
-    list_local_dataset_options,
     normalize_explorer_source,
     resolve_local_dataset_path,
     resolve_path_dataset,

@@ -5,12 +5,12 @@ from collections import deque
 from typing import TYPE_CHECKING, Any, Literal
 
 from loguru import logger
+from pydantic import Field
 
 from roboclaw.bus.events import OutboundMessage
 from roboclaw.bus.queue import MessageBus
 from roboclaw.channels.base import BaseChannel
 from roboclaw.config.schema import Base
-from pydantic import Field
 
 try:
     import botpy

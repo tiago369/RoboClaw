@@ -16,6 +16,7 @@ class RenameRequest(BaseModel):
 def _map_service_errors(app: FastAPI) -> None:
     from fastapi.requests import Request
     from fastapi.responses import JSONResponse
+
     from roboclaw.embodied.service import EmbodimentBusyError
 
     @app.exception_handler(EmbodimentBusyError)

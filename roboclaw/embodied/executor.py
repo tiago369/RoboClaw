@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import os
 import signal
-import sys
 from collections import deque
 from pathlib import Path
 from uuid import uuid4

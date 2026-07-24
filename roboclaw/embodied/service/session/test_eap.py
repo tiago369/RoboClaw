@@ -28,9 +28,11 @@ for _name in ("roboclaw.agent", "roboclaw.agent.tools",
     sys.modules[_name] = _stub
 
 from roboclaw.embodied.service.session.eap import (  # noqa: E402
-    EAPController, ResetResult, SpotResetExecutor, LeRobotResetExecutor,
+    EAPController,
+    LeRobotResetExecutor,
+    ResetResult,
+    SpotResetExecutor,
 )
-
 
 # ---------------------------------------------------------------------------
 # Mocks
@@ -410,7 +412,7 @@ async def main():
     for test in tests:
         try:
             await test()
-        except Exception as exc:
+        except Exception:
             import traceback
             print(f"✗ {test.__name__}: FAILED")
             traceback.print_exc()

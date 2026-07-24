@@ -24,7 +24,6 @@ from roboclaw.providers.factory import build_provider
 from roboclaw.providers.registry import PROVIDERS
 from roboclaw.utils.helpers import sync_workspace_templates
 
-
 # ------------------------------------------------------------------
 # Settings helpers
 # ------------------------------------------------------------------
@@ -329,8 +328,8 @@ def create_app(
     # Serve built frontend in production (ui/dist/)
     ui_dist = Path(__file__).resolve().parent.parent.parent / "ui" / "dist"
     if ui_dist.is_dir():
-        from starlette.staticfiles import StaticFiles
         from starlette.responses import FileResponse
+        from starlette.staticfiles import StaticFiles
 
         app.mount("/assets", StaticFiles(directory=str(ui_dist / "assets")), name="ui-assets")
 

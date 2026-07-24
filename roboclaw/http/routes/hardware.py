@@ -8,10 +8,9 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 
-from roboclaw.embodied.service import EmbodiedService
 from roboclaw.embodied.embodiment.hardware.scan import capture_named_camera_frames
+from roboclaw.embodied.service import EmbodiedService
 from roboclaw.http.routes._previews import serve_preview_image
-
 
 HARDWARE_PREVIEW_DIR = Path("/tmp/roboclaw-camera-previews/hardware")
 

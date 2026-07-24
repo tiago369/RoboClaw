@@ -58,8 +58,10 @@ def register_setup_routes(app: FastAPI, service: Any) -> None:
     @app.post("/api/setup/permissions/fix")
     async def setup_permissions_fix() -> dict[str, Any]:
         import os
+
         from roboclaw.embodied.embodiment.hardware.scan import (
-            check_device_permissions, fix_serial_permissions,
+            check_device_permissions,
+            fix_serial_permissions,
         )
         fixed = await asyncio.to_thread(fix_serial_permissions)
         status = await asyncio.to_thread(check_device_permissions)

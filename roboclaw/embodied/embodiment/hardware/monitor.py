@@ -150,7 +150,10 @@ def get_missing_arm_motors(arm: ArmBinding) -> list[str]:
     motor_config = _motor_config_from_arm(arm, runtime_spec)
     probe_cfg = get_probe_config(arm.arm_type)
     prober = get_prober(probe_cfg.protocol)
-    found_id_set = set(prober.probe(arm.port, probe_cfg.baudrate, list(probe_cfg.motor_ids)))
+    found = prober.probe(arm.port, probe_cfg.baudrate, list(probe_cfg.motor_ids))
+    if found is None:
+        return []  # port could not be opened — can't tell which motors are missing
+    found_id_set = set(found)
     return [
         _pretty_motor_name(name)
         for name, (motor_id, _) in motor_config.items()

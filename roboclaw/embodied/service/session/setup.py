@@ -386,7 +386,7 @@ class SetupSession:
 
     def next_step(self):
         """Return the next interaction step, or None when done."""
-        from roboclaw.embodied.toolkit.protocol import PollStep, PromptStep
+        from roboclaw.embodied.toolkit.protocol import PromptStep
 
         if self._result:
             return None
@@ -442,10 +442,11 @@ class SetupSession:
     # -- Prompting helpers (private) -----------------------------------------
 
     def _next_step_idle(self):
-        from roboclaw.embodied.toolkit.protocol import PromptStep
         from roboclaw.embodied.embodiment.catalog import (
-            EmbodimentCategory, models_for,
+            EmbodimentCategory,
+            models_for,
         )
+        from roboclaw.embodied.toolkit.protocol import PromptStep
         lang = self._language
 
         model = self._pending_kwargs.get("model", "")
@@ -627,8 +628,9 @@ class SetupSession:
                     cameras[int(idx)] = dev
         if not cameras:
             return "No video devices found."
-        from roboclaw.embodied.embodiment.hardware.camera_preview import CameraPreviewServer
         import webbrowser
+
+        from roboclaw.embodied.embodiment.hardware.camera_preview import CameraPreviewServer
         srv = CameraPreviewServer(cameras)
         url = srv.start()
         self._camera_preview = srv

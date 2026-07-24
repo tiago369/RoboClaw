@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from roboclaw.embodied.board import Board, Command, InputConsumer, OutputConsumer, SessionState
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 _RE_RECORDING_EP = re.compile(r"Recording episode (\d+)")
 
 
-class RecordPhase(Enum):
+class RecordPhase(StrEnum):
     IDLE = "idle"
     PREPARING = "preparing"
     RECORDING = "recording"

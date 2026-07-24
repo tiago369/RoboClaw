@@ -15,10 +15,8 @@ Exemplos:
 from __future__ import annotations
 
 import json
-import math
 import pathlib
 import time
-from typing import Any
 
 _DEFAULT_PATH = pathlib.Path("~/.roboclaw/locations.json").expanduser()
 

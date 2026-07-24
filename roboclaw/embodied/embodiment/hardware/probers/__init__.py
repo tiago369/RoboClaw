@@ -7,8 +7,12 @@ from typing import Protocol
 class PortProber(Protocol):
     """Interface for protocol-specific port probing."""
 
-    def probe(self, port_path: str, baudrate: int = 1_000_000, motor_ids: list[int] | None = None) -> list[int]:
-        """Probe port, return responding motor IDs. Empty list = no match."""
+    def probe(self, port_path: str, baudrate: int = 1_000_000, motor_ids: list[int] | None = None) -> list[int] | None:
+        """Probe port, return responding motor IDs.
+
+        Empty list = port opened but no motor responded. None = the port
+        itself could not be opened, so responsiveness is undetermined.
+        """
         ...
 
     def read_positions(
@@ -32,5 +36,5 @@ def get_prober(protocol: str) -> PortProber:
 
 
 # Eager import to trigger registration
-from roboclaw.embodied.embodiment.hardware.probers import feetech as _feetech  # noqa: F401
 from roboclaw.embodied.embodiment.hardware.probers import dynamixel as _dynamixel  # noqa: F401
+from roboclaw.embodied.embodiment.hardware.probers import feetech as _feetech  # noqa: F401

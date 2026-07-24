@@ -1,9 +1,13 @@
 """Backend SQLite para memória episódica robótica."""
 from __future__ import annotations
-import json, sqlite3, time
+
+import json
+import sqlite3
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
 import numpy as np
 
 _MODEL = None

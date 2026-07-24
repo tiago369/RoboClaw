@@ -13,7 +13,7 @@ _DYNAMIXEL_POS_ADDR = 132
 class DynamixelProber:
     """Probe and read Dynamixel servo motors on a serial port."""
 
-    def probe(self, port_path: str, baudrate: int = DEFAULT_BAUDRATE, motor_ids: list[int] | None = None) -> list[int]:
+    def probe(self, port_path: str, baudrate: int = DEFAULT_BAUDRATE, motor_ids: list[int] | None = None) -> list[int] | None:
         """Try reading Present_Position for Dynamixel motor IDs."""
         import dynamixel_sdk as dxl
 
@@ -21,9 +21,9 @@ class DynamixelProber:
         handler = dxl.PortHandler(port_path)
         try:
             if not handler.openPort():
-                return []
+                return None
         except OSError:
-            return []
+            return None
         try:
             handler.setBaudRate(baudrate)
             packet = dxl.PacketHandler(2.0)

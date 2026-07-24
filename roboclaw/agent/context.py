@@ -6,11 +6,9 @@ import platform
 from pathlib import Path
 from typing import Any
 
-from roboclaw.utils.helpers import current_time_str
-
 from roboclaw.agent.memory import MemoryStore
 from roboclaw.agent.skills import SkillsLoader
-from roboclaw.utils.helpers import build_assistant_message, detect_image_mime
+from roboclaw.utils.helpers import build_assistant_message, current_time_str, detect_image_mime
 
 
 class ContextBuilder:

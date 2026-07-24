@@ -3,7 +3,13 @@ Tests
 cd RoboClaw && python roboclaw/embodied/embodiment/manifest/test_spot_integration.py
 """
 from __future__ import annotations
-import json, os, sys, tempfile, types, pathlib
+
+import json
+import os
+import pathlib
+import sys
+import tempfile
+import types
 
 _HERE = os.path.abspath(os.path.dirname(__file__))
 _ROOT = os.path.abspath(os.path.join(_HERE, "../../../../"))
@@ -101,8 +107,9 @@ sys.modules["lerobot.robots.config"].RobotConfig=_RC
 
 from roboclaw.embodied.embodiment.manifest.helpers import _VALID_TOP_KEYS
 from roboclaw.embodied.embodiment.manifest.spot_loader import (
-    load_spot_manifest, load_spot_config, load_eap_reset_sequence,
-    _DEFAULT_MANIFEST,
+    load_eap_reset_sequence,
+    load_spot_config,
+    load_spot_manifest,
 )
 
 MANIFEST_PATH = pathlib.Path(_HERE) / "spot_manifest.json"
