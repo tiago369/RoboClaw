@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -12,6 +13,18 @@ from fastapi.testclient import TestClient
 from roboclaw.config.loader import save_config, set_config_path
 from roboclaw.config.schema import Config
 from roboclaw.http.server import create_app
+
+
+@pytest.fixture(autouse=True)
+def isolated_roboclaw_home(tmp_path: Path):
+    with patch(
+        "roboclaw.embodied.embodiment.lock.get_roboclaw_home",
+        return_value=tmp_path,
+    ), patch(
+        "roboclaw.embodied.embodiment.manifest.helpers.get_roboclaw_home",
+        return_value=tmp_path,
+    ):
+        yield
 
 
 def test_provider_status_and_save_roundtrip(tmp_path: Path) -> None:

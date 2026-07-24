@@ -3,10 +3,23 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
 from roboclaw.embodied.service import EmbodiedService
+
+
+@pytest.fixture(autouse=True)
+def isolated_roboclaw_home(tmp_path):
+    with patch(
+        "roboclaw.embodied.embodiment.lock.get_roboclaw_home",
+        return_value=tmp_path,
+    ), patch(
+        "roboclaw.embodied.embodiment.manifest.helpers.get_roboclaw_home",
+        return_value=tmp_path,
+    ):
+        yield
 
 
 def test_lerobot_record_loop_exit_events_are_phase_specific() -> None:

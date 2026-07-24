@@ -76,6 +76,18 @@ def calibration_root(tmp_path: Path) -> Path:
         yield root
 
 
+@pytest.fixture(autouse=True)
+def isolated_roboclaw_home(tmp_path: Path):
+    with patch(
+        "roboclaw.embodied.embodiment.lock.get_roboclaw_home",
+        return_value=tmp_path,
+    ), patch(
+        "roboclaw.embodied.embodiment.manifest.helpers.get_roboclaw_home",
+        return_value=tmp_path,
+    ):
+        yield
+
+
 # ── Auto-timestamp and resume tests ─────────────────────────────────
 
 

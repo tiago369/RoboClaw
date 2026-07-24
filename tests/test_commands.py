@@ -213,6 +213,8 @@ def mock_agent_runtime(tmp_path):
          patch("roboclaw.cli.commands._print_agent_response") as mock_print_response, \
          patch("roboclaw.bus.queue.MessageBus"), \
          patch("roboclaw.cron.service.CronService"), \
+         patch("roboclaw.embodied.embodiment.lock.get_roboclaw_home", return_value=tmp_path), \
+         patch("roboclaw.embodied.embodiment.manifest.helpers.get_roboclaw_home", return_value=tmp_path), \
          patch("roboclaw.agent.loop.AgentLoop") as mock_agent_loop_cls:
 
         agent_loop = MagicMock()
@@ -285,6 +287,8 @@ def test_agent_config_sets_active_path(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr("roboclaw.cli.commands._make_provider", lambda _config: object())
     monkeypatch.setattr("roboclaw.bus.queue.MessageBus", lambda: object())
     monkeypatch.setattr("roboclaw.cron.service.CronService", lambda _store: object())
+    monkeypatch.setattr("roboclaw.embodied.embodiment.lock.get_roboclaw_home", lambda: tmp_path)
+    monkeypatch.setattr("roboclaw.embodied.embodiment.manifest.helpers.get_roboclaw_home", lambda: tmp_path)
 
     class _FakeAgentLoop:
         def __init__(self, *args, **kwargs) -> None:

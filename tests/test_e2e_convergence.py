@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI
@@ -54,6 +55,18 @@ MOCK_SETUP = {
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def isolated_roboclaw_home(tmp_path):
+    with patch(
+        "roboclaw.embodied.embodiment.lock.get_roboclaw_home",
+        return_value=tmp_path,
+    ), patch(
+        "roboclaw.embodied.embodiment.manifest.helpers.get_roboclaw_home",
+        return_value=tmp_path,
+    ):
+        yield
+
 
 @pytest.fixture()
 def service(tmp_path, monkeypatch):
