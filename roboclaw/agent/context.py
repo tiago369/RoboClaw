@@ -40,12 +40,9 @@ class ContextBuilder:
             parts.append(f"# Memory\n\n{memory}")
 
         if self._episode_memory is not None:
-            recent = self._episode_memory._store.get_recent(limit=5)
-            if recent:
-                lines = ["## Robotic episode memory (recent experience)"]
-                for i, ep in enumerate(recent, 1):
-                    lines.append(f"  {i}. {ep.to_context_string()}")
-                parts.append("\n".join(lines))
+            summary = self._episode_memory.get_distilled_summary()
+            if summary:
+                parts.append(f"## Robotic episode memory (distilled experience)\n\n{summary}")
 
         always_skills = self.skills.get_always_skills()
         if always_skills:

@@ -1,13 +1,26 @@
 """API pública da memória episódica robótica do RoboClaw."""
 from __future__ import annotations
 
+import json
 import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
+
+from loguru import logger
 
 from .store import Episode, EpisodeStore
+
+_DISTILL_PROMPT = """Summarize the following robotic task episodes into a concise \
+natural-language briefing (under 300 words) that an assistant can use as background \
+context for future tasks. Focus on what worked, what failed and why, and any \
+recurring problems. Do not invent details that are not present below.
+
+Stats: {stats}
+
+Episodes (oldest to newest):
+{episodes}"""
 
 
 @dataclass
@@ -44,43 +57,79 @@ class RoboClawMemory:
         self._task_id = task_id or str(uuid.uuid4())[:8]
         self._attempt_counter: dict[str, int] = {}
         self.working = WorkingMemory(task_id=self._task_id)
+        self._distilled_summary = ""
+        self._distilled_at_count = 0
 
-    def store(self, subtask: str, outcome: str, env_state: dict) -> Episode:
+    def store(self, subtask: str, outcome: str, env_state: dict, kind: str = "task") -> Episode:
         attempt = self._attempt_counter.get(subtask, 0) + 1
         self._attempt_counter[subtask] = attempt
         eid = self._store.insert(subtask=subtask, outcome=outcome, env_state=env_state,
-                                  task_id=self._task_id, attempt=attempt)
+                                  task_id=self._task_id, attempt=attempt, kind=kind)
         ep = self._store.get(eid)
         self.working.pending_episodes.append(ep)
         return ep
 
-    def retrieve(self, query: str, top_k: int = 3, as_context_string: bool = False):
-        results = self._store.search(query, top_k=top_k)
+    def retrieve(self, query: str, top_k: int = 3, as_context_string: bool = False,
+                 kind: Optional[str] = "task"):
+        results = self._store.search(query, top_k=top_k, kind=kind)
         episodes = [ep for ep, _ in results]
         if not as_context_string: return episodes
-        if not episodes: return "No relevant past robotic experience found."
+        if not episodes: return ""
         lines = ["## Robotic episode memory (past experience)"]
         for i, ep in enumerate(episodes, 1):
             lines.append(f"  {i}. {ep.to_context_string()}")
         return "\n".join(lines)
 
-    def consolidate(self) -> dict:
-        episodes = self._store.get_by_task(self._task_id)
+    def stats(self, limit: Optional[int] = None, kind: str = "task") -> dict:
+        """Read-only success/failure/recovery breakdown over recent episodes."""
+        episodes = self._store.get_recent(limit=limit or 10_000, kind=kind)
         if not episodes:
-            return {"task_id": self._task_id, "total": 0, "message": "nothing to consolidate"}
+            return {"total_episodes": 0, "message": "nothing recorded yet"}
         total = len(episodes)
-        succ  = sum(1 for e in episodes if e.outcome == "success")
-        fail  = sum(1 for e in episodes if e.outcome == "failed")
-        rec   = sum(1 for e in episodes if e.outcome == "recovered")
-        prob  = [s for s,c in self._attempt_counter.items() if c>1]
-        summary = {"task_id": self._task_id, "total_episodes": total,
-                   "successes": succ, "failures": fail, "recoveries": rec,
-                   "success_rate": round(succ/total,2) if total else 0.0,
-                   "problematic_subtasks": prob, "consolidated_at": time.time()}
-        self.working.clear(); self._attempt_counter.clear()
-        self._task_id = str(uuid.uuid4())[:8]
-        self.working.task_id = self._task_id
-        return summary
+        succ = sum(1 for e in episodes if e.outcome == "success")
+        fail = sum(1 for e in episodes if e.outcome == "failed")
+        rec = sum(1 for e in episodes if e.outcome == "recovered")
+        counts: dict[str, int] = {}
+        for e in episodes:
+            counts[e.subtask] = counts.get(e.subtask, 0) + 1
+        return {
+            "total_episodes": total, "successes": succ, "failures": fail, "recoveries": rec,
+            "success_rate": round(succ / total, 2) if total else 0.0,
+            "problematic_subtasks": [s for s, c in counts.items() if c > 1],
+        }
+
+    async def distill(self, provider: Any, model: str, max_episodes: int = 15) -> str:
+        """LLM-based summary of recent task episodes, replacing raw-episode injection."""
+        episodes = self._store.get_recent(limit=max_episodes, kind="task")
+        if not episodes:
+            return self._distilled_summary
+        episodes_text = "\n".join(ep.to_context_string() for ep in reversed(episodes))
+        prompt = _DISTILL_PROMPT.format(
+            stats=json.dumps(self.stats(limit=max_episodes)), episodes=episodes_text,
+        )
+        try:
+            response = await provider.chat_with_retry(
+                messages=[{"role": "user", "content": prompt}], model=model,
+            )
+            summary = (response.content or "").strip()
+        except Exception:
+            logger.warning("Episode distillation failed, keeping previous summary")
+            return self._distilled_summary
+        if summary:
+            self._distilled_summary = summary
+            self._distilled_at_count = self._store.count(kind="task")
+        return self._distilled_summary
+
+    async def maybe_distill(self, provider: Any, model: str, every: int = 5,
+                             max_episodes: int = 15) -> None:
+        """Re-distill only after `every` new task episodes since the last pass."""
+        total = self._store.count(kind="task")
+        if total == 0 or (self._distilled_summary and total - self._distilled_at_count < every):
+            return
+        await self.distill(provider, model, max_episodes=max_episodes)
+
+    def get_distilled_summary(self) -> str:
+        return self._distilled_summary
 
     def set_active_skill(self, skill_name: str): self.working.active_skill = skill_name
     def log_tool_call(self, tool: str, result: str): self.working.add_tool_call(tool, result)
