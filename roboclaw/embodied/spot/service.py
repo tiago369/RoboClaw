@@ -189,7 +189,7 @@ class SpotService:
 
         try:
             future = self._seg_client.call_async(req)
-            res = await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            res = await self._await_future(future, timeout_s)
         except asyncio.TimeoutError:
             return json.dumps({"status": "error", "error": "segment_object timed out"})
 
@@ -241,7 +241,7 @@ class SpotService:
 
         try:
             future = self._grasp_client.call_async(req)
-            res = await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            res = await self._await_future(future, timeout_s)
         except asyncio.TimeoutError:
             return json.dumps({"status": "error", "error": "generate_grasps timed out"})
 
@@ -308,7 +308,7 @@ class SpotService:
 
         try:
             future = self._curobo_client.call_async(req)
-            res = await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            res = await self._await_future(future, timeout_s)
         except asyncio.TimeoutError:
             return json.dumps({"status": "error", "error": "plan_trajectory timed out"})
 
@@ -374,7 +374,7 @@ class SpotService:
 
         try:
             future = self._grasping_client.call_async(req)
-            res = await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            res = await self._await_future(future, timeout_s)
         except asyncio.TimeoutError:
             return json.dumps({"status": "error", "error": "execute_grasp timed out"})
 
@@ -420,7 +420,7 @@ class SpotService:
 
         try:
             future = self._grasping_client.call_async(req)
-            res = await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            res = await self._await_future(future, timeout_s)
         except asyncio.TimeoutError:
             return json.dumps({"status": "error", "error": "move_to_home timed out"})
 
@@ -495,7 +495,7 @@ class SpotService:
 
         try:
             future = client.send_goal_async(goal)
-            await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            await self._await_future(future, timeout_s)
         except asyncio.TimeoutError:
             return json.dumps({"status": "error", "error": f"Navegação timeout após {timeout_s}s"})
 
@@ -522,6 +522,30 @@ class SpotService:
         return json.dumps({"status": "ok", "action": f"move_{direction}",
                            "distance_m": dist, "duration_s": round(dur, 2)})
 
+    async def _await_future(self, future: Any, timeout_s: float) -> Any:
+        """
+        Aguarda um rclpy.task.Future (resolvido pela thread do executor) a
+        partir do event loop asyncio da thread principal.
+
+        asyncio.wrap_future() exige um concurrent.futures.Future — um
+        rclpy.task.Future não é compatível — por isso a ponte manual via
+        add_done_callback + call_soon_threadsafe.
+        """
+        loop = asyncio.get_running_loop()
+        aio_future: asyncio.Future = loop.create_future()
+
+        def _resolve(f: Any) -> None:
+            if aio_future.cancelled():
+                return
+            exc = f.exception()
+            if exc is not None:
+                aio_future.set_exception(exc)
+            else:
+                aio_future.set_result(f.result())
+
+        future.add_done_callback(lambda f: loop.call_soon_threadsafe(_resolve, f))
+        return await asyncio.wait_for(aio_future, timeout=timeout_s)
+
     async def _publish_for(self, publisher: Any, msg: Any, duration_s: float) -> None:
         hz = 10
         steps = max(1, int(duration_s * hz))
@@ -538,7 +562,7 @@ class SpotService:
         from std_srvs.srv import Trigger
         try:
             future = client.call_async(Trigger.Request())
-            res = await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            res = await self._await_future(future, timeout_s)
             return json.dumps({
                 "status": "ok" if res.success else "error",
                 "action": label,
@@ -592,7 +616,7 @@ class SpotService:
 
         try:
             future = self._grasping_client.call_async(req)
-            res = await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            res = await self._await_future(future, timeout_s)
         except asyncio.TimeoutError:
             return json.dumps({"status": "error", "error": "move_arm_to_observe timed out"})
 
@@ -633,7 +657,7 @@ class SpotService:
 
         try:
             future = self._grasping_client.call_async(req)
-            res = await asyncio.wait_for(asyncio.wrap_future(future), timeout=timeout_s)
+            res = await self._await_future(future, timeout_s)
         except asyncio.TimeoutError:
             return json.dumps({"status": "error", "error": "move_arm_to_carry timed out"})
 
